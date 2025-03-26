@@ -1,0 +1,107 @@
+package CAIMEOX/lazy-list
+
+alias @CAIMEOX/lazy as @lazy
+alias @moonbitlang/core/immut/list as @list
+
+// Values
+fn concat[T](LazyList[T], LazyList[T]) -> LazyList[T]
+
+fn default[X : Default]() -> LazyList[X]
+
+fn drop[T](LazyList[T], Int) -> LazyList[T]
+
+fn drop_while[T](LazyList[T], (T) -> Bool) -> LazyList[T]
+
+fn each[T](LazyList[T], (T) -> Unit) -> Unit
+
+fn eachi[T](LazyList[T], (Int, T) -> Unit) -> Unit
+
+fn filter[T](LazyList[T], (T) -> Bool) -> LazyList[T]
+
+fn flat_map[T, U](LazyList[T], (T) -> LazyList[U]) -> LazyList[U]
+
+fn flatten[T](LazyList[LazyList[T]]) -> LazyList[T]
+
+fn fold_left[T, U](LazyList[T], (U, T) -> U, init~ : U) -> U
+
+fn fold_right[T, U](LazyList[T], (T, U) -> U, init~ : U) -> U
+
+fn head[T](LazyList[T]) -> T
+
+fn index[T](LazyList[T], Int) -> T
+
+fn infinite_stream[X : Add](X, X) -> LazyList[X]
+
+fn length[T](LazyList[T]) -> Int
+
+fn map[T, U](LazyList[T], (T) -> U) -> LazyList[U]
+
+fn nats() -> LazyList[Int]
+
+fn repeat[T](T) -> LazyList[T]
+
+fn split_at[T](LazyList[T], Int) -> (LazyList[T], LazyList[T])
+
+fn sum[X : Add](LazyList[X], init~ : X) -> X
+
+fn tail[T](LazyList[T]) -> LazyList[T]
+
+fn tails[T](LazyList[T]) -> LazyList[LazyList[T]]
+
+fn take[T](LazyList[T], Int) -> LazyList[T]
+
+fn take_while[T](LazyList[T], (T) -> Bool) -> LazyList[T]
+
+fn to_array[T](LazyList[T]) -> Array[T]
+
+fn unfold[T](LazyList[T], (LazyList[T]) -> (T, LazyList[T])?) -> LazyList[T]
+
+fn unzip[T, W](LazyList[(T, W)]) -> (LazyList[T], LazyList[W])
+
+fn zip_lazy_normal[A, B, C](LazyList[A], (A, B) -> C, @list.T[B]) -> @list.T[C]
+
+fn zip_plus[T]((T, T) -> T, LazyList[T], LazyList[T]) -> LazyList[T]
+
+fn zip_with[A, B, C](LazyList[A], LazyList[B], (A, B) -> C) -> LazyList[C]
+
+// Types and methods
+pub(all) enum LazyList[T] {
+  Nil
+  Cons(T, @lazy.Lazy[LazyList[T]])
+}
+impl LazyList {
+  concat[T](Self[T], Self[T]) -> Self[T]
+  drop[T](Self[T], Int) -> Self[T]
+  drop_while[T](Self[T], (T) -> Bool) -> Self[T]
+  each[T](Self[T], (T) -> Unit) -> Unit
+  eachi[T](Self[T], (Int, T) -> Unit) -> Unit
+  filter[T](Self[T], (T) -> Bool) -> Self[T]
+  flat_map[T, U](Self[T], (T) -> Self[U]) -> Self[U]
+  flatten[T](Self[Self[T]]) -> Self[T]
+  fold_left[T, U](Self[T], (U, T) -> U, init~ : U) -> U
+  fold_right[T, U](Self[T], (T, U) -> U, init~ : U) -> U
+  from_array[T](Array[T]) -> Self[T]
+  from_list[T](@list.T[T]) -> Self[T]
+  head[T](Self[T]) -> T
+  index[T](Self[T], Int) -> T
+  length[T](Self[T]) -> Int
+  map[T, U](Self[T], (T) -> U) -> Self[U]
+  split_at[T](Self[T], Int) -> (Self[T], Self[T])
+  tail[T](Self[T]) -> Self[T]
+  tails[T](Self[T]) -> Self[Self[T]]
+  take[T](Self[T], Int) -> Self[T]
+  take_while[T](Self[T], (T) -> Bool) -> Self[T]
+  to_array[T](Self[T]) -> Array[T]
+  unfold[T](Self[T], (Self[T]) -> (T, Self[T])?) -> Self[T]
+  unzip[T, W](Self[(T, W)]) -> (Self[T], Self[W])
+  zip_lazy_normal[A, B, C](Self[A], (A, B) -> C, @list.T[B]) -> @list.T[C]
+  zip_with[A, B, C](Self[A], Self[B], (A, B) -> C) -> Self[C]
+}
+impl[T] Add for LazyList[T]
+impl[T : Eq] Eq for LazyList[T]
+impl[T : Show] Show for LazyList[T]
+
+// Type aliases
+
+// Traits
+
