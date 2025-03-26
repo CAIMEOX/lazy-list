@@ -1,11 +1,11 @@
 {
   "name": "CAIMEOX/lazy-list",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "deps": {
     "CAIMEOX/lazy": "0.1.0"
   },
   "readme": "README.md",
-  "repository": "",
+  "repository": "https://github.com/CAIMEOX/lazy-list",
   "license": "MIT",
   "keywords": [
     "lazy",
