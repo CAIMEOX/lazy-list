@@ -1,0 +1,8 @@
+{
+    "import":[
+        {
+            "path": "CAIMEOX/lazy",
+            "alias": "lazy"
+        }
+    ]
+}

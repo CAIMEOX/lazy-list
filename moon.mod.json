@@ -1,0 +1,16 @@
+{
+  "name": "CAIMEOX/lazy-list",
+  "version": "0.1.0",
+  "deps": {
+    "CAIMEOX/lazy": "0.1.0"
+  },
+  "readme": "README.md",
+  "repository": "",
+  "license": "MIT",
+  "keywords": [
+    "lazy",
+    "lazy-list"
+  ],
+  "description": "Lazy list in MoonBit",
+  "source": "src"
+}
