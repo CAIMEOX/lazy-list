@@ -1,10 +1,10 @@
 ///| A lazy list library providing efficient, on-demand evaluation of list operations.
 /// The library supports common list operations like map, filter, fold, etc., but
 /// evaluates them lazily, only computing elements when needed.
-typealias Lazy[T] = @lazy.Lazy[T]
+typealias @lazy.Lazy
 
 ///|
-typealias List[T] = @immut/list.T[T]
+typealias @immut/list.T as List
 
 ///|
 /// A lazy list type that can be either empty (Nil) or a head element with a lazily
@@ -16,13 +16,13 @@ pub(all) enum LazyList[T] {
 
 ///|
 /// Creates a default empty lazy list for types that implement Default.
-pub fn default[X : Default]() -> LazyList[X] {
+pub fn[X : Default] default() -> LazyList[X] {
   Nil
 }
 
 ///|
 /// Converts an immutable List to a LazyList.
-pub fn LazyList::from_list[T](ls : List[T]) -> LazyList[T] {
+pub fn[T] LazyList::from_list(ls : List[T]) -> LazyList[T] {
   loop ls, Nil {
     Nil, acc => acc
     Cons(x, xs), acc => continue xs, Cons(x, Lazy::from_value(acc))
@@ -31,7 +31,7 @@ pub fn LazyList::from_list[T](ls : List[T]) -> LazyList[T] {
 
 ///|
 /// Converts an Array to a LazyList in reverse order.
-pub fn LazyList::from_array[T](ar : Array[T]) -> LazyList[T] {
+pub fn[T] LazyList::from_array(ar : Array[T]) -> LazyList[T] {
   loop ar.length() - 1, Nil {
     -1, acc => acc
     n, acc => continue n - 1, Cons(ar[n], Lazy::from_value(acc))
@@ -59,7 +59,7 @@ pub impl[T : Eq] Eq for LazyList[T] with op_equal(self, other) {
 
 ///|
 /// Gets the element at a specific index in the lazy list.
-pub fn index[T](self : LazyList[T], i : Int) -> T {
+pub fn[T] index(self : LazyList[T], i : Int) -> T {
   match (self, i) {
     (Cons(x, _), 0) => x
     (Nil, _) => abort("index: out of bounds")
@@ -69,7 +69,7 @@ pub fn index[T](self : LazyList[T], i : Int) -> T {
 
 ///|
 /// Returns a lazy list of all final segments of the original list.
-pub fn tails[T](self : LazyList[T]) -> LazyList[LazyList[T]] {
+pub fn[T] tails(self : LazyList[T]) -> LazyList[LazyList[T]] {
   fn go(xs) {
     Cons(
       xs,
@@ -85,7 +85,7 @@ pub fn tails[T](self : LazyList[T]) -> LazyList[LazyList[T]] {
 
 ///|
 /// Concatenates two lazy lists together.
-pub fn concat[T](self : LazyList[T], other : LazyList[T]) -> LazyList[T] {
+pub fn[T] concat(self : LazyList[T], other : LazyList[T]) -> LazyList[T] {
   match self {
     Nil => other
     Cons(x, xs) =>
@@ -101,13 +101,13 @@ pub impl[T] Add for LazyList[T] with op_add(self, other) {
 
 ///|
 /// Creates an infinite lazy list repeating the same value.
-pub fn repeat[T](val : T) -> LazyList[T] {
+pub fn[T] repeat(val : T) -> LazyList[T] {
   Cons(val, @lazy.Lazy::from_thunk(fn() { repeat(val) }))
 }
 
 ///|
 /// Maps a function over a lazy list.
-pub fn map[T, U](self : LazyList[T], f : (T) -> U) -> LazyList[U] {
+pub fn[T, U] map(self : LazyList[T], f : (T) -> U) -> LazyList[U] {
   match self {
     Nil => Nil
     Cons(x, xs) =>
@@ -117,9 +117,9 @@ pub fn map[T, U](self : LazyList[T], f : (T) -> U) -> LazyList[U] {
 
 ///|
 /// Flat maps a function over a lazy list.
-pub fn flat_map[T, U](
+pub fn[T, U] flat_map(
   self : LazyList[T],
-  f : (T) -> LazyList[U]
+  f : (T) -> LazyList[U],
 ) -> LazyList[U] {
   match self {
     Nil => Nil
@@ -129,7 +129,7 @@ pub fn flat_map[T, U](
 
 ///|
 /// Flattens a lazy list of lazy lists into a single lazy list.
-pub fn flatten[T](self : LazyList[LazyList[T]]) -> LazyList[T] {
+pub fn[T] flatten(self : LazyList[LazyList[T]]) -> LazyList[T] {
   match self {
     Nil => Nil
     Cons(h, t) => h.concat(flatten(t.force()))
@@ -138,7 +138,7 @@ pub fn flatten[T](self : LazyList[LazyList[T]]) -> LazyList[T] {
 
 ///|
 /// Splits a lazy list at the given index.
-pub fn split_at[T](self : LazyList[T], i : Int) -> (LazyList[T], LazyList[T]) {
+pub fn[T] split_at(self : LazyList[T], i : Int) -> (LazyList[T], LazyList[T]) {
   if i <= 0 {
     (Nil, self)
   } else {
@@ -159,7 +159,7 @@ pub fn split_at[T](self : LazyList[T], i : Int) -> (LazyList[T], LazyList[T]) {
 
 ///|
 /// Left fold over a lazy list.
-pub fn fold_left[T, U](self : LazyList[T], f : (U, T) -> U, init~ : U) -> U {
+pub fn[T, U] fold_left(self : LazyList[T], f : (U, T) -> U, init~ : U) -> U {
   match self {
     Nil => init
     Cons(x, xs) => fold_left(xs.force(), f, init=f(init, x))
@@ -168,7 +168,7 @@ pub fn fold_left[T, U](self : LazyList[T], f : (U, T) -> U, init~ : U) -> U {
 
 ///|
 /// Right fold over a lazy list.
-pub fn fold_right[T, U](self : LazyList[T], f : (T, U) -> U, init~ : U) -> U {
+pub fn[T, U] fold_right(self : LazyList[T], f : (T, U) -> U, init~ : U) -> U {
   match self {
     Nil => init
     Cons(y, ys) => f(y, ys.force().fold_right(f, init~))
@@ -177,7 +177,7 @@ pub fn fold_right[T, U](self : LazyList[T], f : (T, U) -> U, init~ : U) -> U {
 
 ///|
 /// Gets the first element of a lazy list.
-pub fn head[T](self : LazyList[T]) -> T {
+pub fn[T] head(self : LazyList[T]) -> T {
   match self {
     Cons(x, _) => x
     Nil => abort("head: empty list")
@@ -186,7 +186,7 @@ pub fn head[T](self : LazyList[T]) -> T {
 
 ///|
 /// Gets the tail of a lazy list.
-pub fn tail[T](self : LazyList[T]) -> LazyList[T] {
+pub fn[T] tail(self : LazyList[T]) -> LazyList[T] {
   match self {
     Cons(_, xs) => xs.force()
     Nil => abort("tail: empty list")
@@ -195,7 +195,7 @@ pub fn tail[T](self : LazyList[T]) -> LazyList[T] {
 
 ///|
 /// Computes the length of a lazy list.
-pub fn length[T](self : LazyList[T]) -> Int {
+pub fn[T] length(self : LazyList[T]) -> Int {
   loop self, 0 {
     Nil, l => l
     Cons(_, xs), l => continue xs.force(), l + 1
@@ -204,7 +204,7 @@ pub fn length[T](self : LazyList[T]) -> Int {
 
 ///|
 /// Applies a function to each element of a lazy list for side effects.
-pub fn each[T](self : LazyList[T], f : (T) -> Unit) -> Unit {
+pub fn[T] each(self : LazyList[T], f : (T) -> Unit) -> Unit {
   loop self {
     Nil => ()
     Cons(h, t) => {
@@ -216,7 +216,7 @@ pub fn each[T](self : LazyList[T], f : (T) -> Unit) -> Unit {
 
 ///|
 /// Applies a function to each element with its index for side effects.
-pub fn eachi[T](self : LazyList[T], f : (Int, T) -> Unit) -> Unit {
+pub fn[T] eachi(self : LazyList[T], f : (Int, T) -> Unit) -> Unit {
   loop self, 0 {
     Nil, _ => ()
     Cons(x, xs), i => {
@@ -228,16 +228,16 @@ pub fn eachi[T](self : LazyList[T], f : (Int, T) -> Unit) -> Unit {
 
 ///|
 /// Sums the elements of a lazy list with an initial value.
-pub fn sum[X : Add](l : LazyList[X], init~ : X) -> X {
+pub fn[X : Add] sum(l : LazyList[X], init~ : X) -> X {
   l.fold_left(Add::op_add, init~)
 }
 
 ///|
 /// Zips two lazy lists with a combining function.
-pub fn zip_with[A, B, C](
+pub fn[A, B, C] zip_with(
   self : LazyList[A],
   ys : LazyList[B],
-  f : (A, B) -> C
+  f : (A, B) -> C,
 ) -> LazyList[C] {
   match (self, ys) {
     (Cons(x, xs), Cons(y, ys)) =>
@@ -251,7 +251,7 @@ pub fn zip_with[A, B, C](
 
 ///|
 /// Takes elements from a lazy list while they satisfy a predicate.
-pub fn take_while[T](self : LazyList[T], p : (T) -> Bool) -> LazyList[T] {
+pub fn[T] take_while(self : LazyList[T], p : (T) -> Bool) -> LazyList[T] {
   match self {
     Nil => Nil
     Cons(x, xs) =>
@@ -265,7 +265,7 @@ pub fn take_while[T](self : LazyList[T], p : (T) -> Bool) -> LazyList[T] {
 
 ///|
 /// Takes the first n elements from a lazy list.
-pub fn take[T](self : LazyList[T], n : Int) -> LazyList[T] {
+pub fn[T] take(self : LazyList[T], n : Int) -> LazyList[T] {
   if n <= 0 {
     Nil
   } else {
@@ -278,7 +278,7 @@ pub fn take[T](self : LazyList[T], n : Int) -> LazyList[T] {
 
 ///|
 /// Drops the first n elements from a lazy list.
-pub fn drop[T](self : LazyList[T], n : Int) -> LazyList[T] {
+pub fn[T] drop(self : LazyList[T], n : Int) -> LazyList[T] {
   if n <= 0 {
     self
   } else {
@@ -291,7 +291,7 @@ pub fn drop[T](self : LazyList[T], n : Int) -> LazyList[T] {
 
 ///|
 /// Drops elements from a lazy list while they satisfy a predicate.
-pub fn drop_while[T](self : LazyList[T], p : (T) -> Bool) -> LazyList[T] {
+pub fn[T] drop_while(self : LazyList[T], p : (T) -> Bool) -> LazyList[T] {
   match self {
     Nil => Nil
     Cons(x, xs) => if p(x) { drop_while(xs.force(), p) } else { self }
@@ -300,7 +300,7 @@ pub fn drop_while[T](self : LazyList[T], p : (T) -> Bool) -> LazyList[T] {
 
 ///|
 /// Creates an infinite lazy list with arithmetic progression.
-pub fn infinite_stream[X : Add](start : X, step : X) -> LazyList[X] {
+pub fn[X : Add] infinite_stream(start : X, step : X) -> LazyList[X] {
   Cons(start, Lazy::from_thunk(fn() { infinite_stream(start + step, step) }))
 }
 
@@ -312,10 +312,10 @@ pub fn nats() -> LazyList[Int] {
 
 ///|
 /// Zips a lazy list with a normal list using a combining function.
-pub fn zip_lazy_normal[A, B, C](
+pub fn[A, B, C] zip_lazy_normal(
   self : LazyList[A],
   f : (A, B) -> C,
-  ys : @immut/list.T[B]
+  ys : @immut/list.T[B],
 ) -> @immut/list.T[C] {
   match (self, ys) {
     (Cons(x, xs), Cons(y, ys)) =>
@@ -326,10 +326,10 @@ pub fn zip_lazy_normal[A, B, C](
 
 ///|
 /// Zips two lazy lists with a combining function, concatenating remaining elements.
-pub fn zip_plus[T](
+pub fn[T] zip_plus(
   f : (T, T) -> T,
   ls1 : LazyList[T],
-  ls2 : LazyList[T]
+  ls2 : LazyList[T],
 ) -> LazyList[T] {
   match (ls1, ls2) {
     (Cons(x, xs), Cons(y, ys)) =>
@@ -343,9 +343,9 @@ pub fn zip_plus[T](
 
 ///|
 /// Unfolds a lazy list using a generator function.
-pub fn unfold[T](
+pub fn[T] unfold(
   self : LazyList[T],
-  f : (LazyList[T]) -> (T, LazyList[T])?
+  f : (LazyList[T]) -> (T, LazyList[T])?,
 ) -> LazyList[T] {
   match f(self) {
     None => Nil
@@ -355,7 +355,7 @@ pub fn unfold[T](
 
 ///|
 /// Filters a lazy list using a predicate.
-pub fn filter[T](self : LazyList[T], pred : (T) -> Bool) -> LazyList[T] {
+pub fn[T] filter(self : LazyList[T], pred : (T) -> Bool) -> LazyList[T] {
   match self {
     Nil => Nil
     Cons(x, xs) => {
@@ -371,7 +371,7 @@ pub fn filter[T](self : LazyList[T], pred : (T) -> Bool) -> LazyList[T] {
 
 ///|
 /// Unzips a lazy list of pairs into a pair of lazy lists.
-pub fn unzip[T, W](self : LazyList[(T, W)]) -> (LazyList[T], LazyList[W]) {
+pub fn[T, W] unzip(self : LazyList[(T, W)]) -> (LazyList[T], LazyList[W]) {
   match self {
     Nil => (Nil, Nil)
     Cons((x, y), xs) => {
@@ -383,7 +383,7 @@ pub fn unzip[T, W](self : LazyList[(T, W)]) -> (LazyList[T], LazyList[W]) {
 
 ///|
 /// Converts a lazy list to an array.
-pub fn to_array[T](self : LazyList[T]) -> Array[T] {
+pub fn[T] to_array(self : LazyList[T]) -> Array[T] {
   let res = []
   loop self {
     Nil => ()
