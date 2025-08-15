@@ -4,7 +4,7 @@
 typealias @lazy.Lazy
 
 ///|
-typealias @immut/list.T as List
+typealias @list.List
 
 ///|
 /// A lazy list type that can be either empty (Nil) or a head element with a lazily
@@ -16,25 +16,26 @@ pub(all) enum LazyList[T] {
 
 ///|
 /// Creates a default empty lazy list for types that implement Default.
-pub fn[X : Default] default() -> LazyList[X] {
+pub fn[X] default() -> LazyList[X] {
   Nil
 }
 
 ///|
 /// Converts an immutable List to a LazyList.
 pub fn[T] LazyList::from_list(ls : List[T]) -> LazyList[T] {
-  loop ls, Nil {
-    Nil, acc => acc
-    Cons(x, xs), acc => continue xs, Cons(x, Lazy::from_value(acc))
+  loop (ls, Nil) {
+    (List::Empty, acc) => acc
+    (List::More(x, tail~), acc) =>
+      continue (tail, Cons(x, Lazy::from_value(acc)))
   }
 }
 
 ///|
 /// Converts an Array to a LazyList in reverse order.
 pub fn[T] LazyList::from_array(ar : Array[T]) -> LazyList[T] {
-  loop ar.length() - 1, Nil {
-    -1, acc => acc
-    n, acc => continue n - 1, Cons(ar[n], Lazy::from_value(acc))
+  loop (ar.length() - 1, Nil) {
+    (-1, acc) => acc
+    (n, acc) => continue (n - 1, Cons(ar[n], Lazy::from_value(acc)))
   }
 }
 
@@ -49,11 +50,12 @@ pub impl[T : Show] Show for LazyList[T] with output(self, logger) {
 ///|
 /// Provides Eq implementation for LazyList, enabling equality comparison.
 pub impl[T : Eq] Eq for LazyList[T] with op_equal(self, other) {
-  loop self, other, true {
-    _, _, false => false
-    Nil, Nil, true => true
-    Cons(x, xs), Cons(y, ys), true => continue xs.force(), ys.force(), x == y
-    _, _, _ => false
+  loop (self, other, true) {
+    (_, _, false) => false
+    (Nil, Nil, true) => true
+    (Cons(x, xs), Cons(y, ys), true) =>
+      continue (xs.force(), ys.force(), x == y)
+    (_, _, _) => false
   }
 }
 
@@ -89,7 +91,7 @@ pub fn[T] concat(self : LazyList[T], other : LazyList[T]) -> LazyList[T] {
   match self {
     Nil => other
     Cons(x, xs) =>
-      Cons(x, @lazy.Lazy::from_thunk(fn() { concat(xs.force(), other) }))
+      Cons(x, @lazy.Lazy::from_thunk(fn() { xs.force().concat(other) }))
   }
 }
 
@@ -111,7 +113,7 @@ pub fn[T, U] map(self : LazyList[T], f : (T) -> U) -> LazyList[U] {
   match self {
     Nil => Nil
     Cons(x, xs) =>
-      Cons(f(x), @lazy.Lazy::from_thunk(fn() { map(xs.force(), f) }))
+      Cons(f(x), @lazy.Lazy::from_thunk(fn() { xs.force().map(f) }))
   }
 }
 
@@ -123,7 +125,7 @@ pub fn[T, U] flat_map(
 ) -> LazyList[U] {
   match self {
     Nil => Nil
-    Cons(x, xs) => f(x).concat(flat_map(xs.force(), f))
+    Cons(x, xs) => f(x).concat(xs.force().flat_map(f))
   }
 }
 
@@ -132,7 +134,7 @@ pub fn[T, U] flat_map(
 pub fn[T] flatten(self : LazyList[LazyList[T]]) -> LazyList[T] {
   match self {
     Nil => Nil
-    Cons(h, t) => h.concat(flatten(t.force()))
+    Cons(h, t) => h.concat(t.force().flatten())
   }
 }
 
@@ -162,7 +164,7 @@ pub fn[T] split_at(self : LazyList[T], i : Int) -> (LazyList[T], LazyList[T]) {
 pub fn[T, U] fold_left(self : LazyList[T], f : (U, T) -> U, init~ : U) -> U {
   match self {
     Nil => init
-    Cons(x, xs) => fold_left(xs.force(), f, init=f(init, x))
+    Cons(x, xs) => xs.force().fold_left(f, init=f(init, x))
   }
 }
 
@@ -196,9 +198,9 @@ pub fn[T] tail(self : LazyList[T]) -> LazyList[T] {
 ///|
 /// Computes the length of a lazy list.
 pub fn[T] length(self : LazyList[T]) -> Int {
-  loop self, 0 {
-    Nil, l => l
-    Cons(_, xs), l => continue xs.force(), l + 1
+  loop (self, 0) {
+    (Nil, l) => l
+    (Cons(_, xs), l) => continue (xs.force(), l + 1)
   }
 }
 
@@ -217,11 +219,11 @@ pub fn[T] each(self : LazyList[T], f : (T) -> Unit) -> Unit {
 ///|
 /// Applies a function to each element with its index for side effects.
 pub fn[T] eachi(self : LazyList[T], f : (Int, T) -> Unit) -> Unit {
-  loop self, 0 {
-    Nil, _ => ()
-    Cons(x, xs), i => {
+  loop (self, 0) {
+    (Nil, _) => ()
+    (Cons(x, xs), i) => {
       f(i, x)
-      continue xs.force(), i + 1
+      continue (xs.force(), i + 1)
     }
   }
 }
@@ -243,7 +245,7 @@ pub fn[A, B, C] zip_with(
     (Cons(x, xs), Cons(y, ys)) =>
       Cons(
         f(x, y),
-        Lazy::from_thunk(fn() { zip_with(xs.force(), ys.force(), f) }),
+        Lazy::from_thunk(fn() { xs.force().zip_with(ys.force(), f) }),
       )
     (_, _) => Nil
   }
@@ -256,7 +258,7 @@ pub fn[T] take_while(self : LazyList[T], p : (T) -> Bool) -> LazyList[T] {
     Nil => Nil
     Cons(x, xs) =>
       if p(x) {
-        Cons(x, Lazy::from_thunk(fn() { take_while(xs.force(), p) }))
+        Cons(x, Lazy::from_thunk(fn() { xs.force().take_while(p) }))
       } else {
         Nil
       }
@@ -271,7 +273,7 @@ pub fn[T] take(self : LazyList[T], n : Int) -> LazyList[T] {
   } else {
     match self {
       Nil => Nil
-      Cons(x, xs) => Cons(x, Lazy::from_value(take(xs.force(), n - 1)))
+      Cons(x, xs) => Cons(x, Lazy::from_value(xs.force().take(n - 1)))
     }
   }
 }
@@ -284,7 +286,7 @@ pub fn[T] drop(self : LazyList[T], n : Int) -> LazyList[T] {
   } else {
     match self {
       Nil => Nil
-      Cons(_, xs) => drop(xs.force(), n - 1)
+      Cons(_, xs) => xs.force().drop(n - 1)
     }
   }
 }
@@ -294,7 +296,7 @@ pub fn[T] drop(self : LazyList[T], n : Int) -> LazyList[T] {
 pub fn[T] drop_while(self : LazyList[T], p : (T) -> Bool) -> LazyList[T] {
   match self {
     Nil => Nil
-    Cons(x, xs) => if p(x) { drop_while(xs.force(), p) } else { self }
+    Cons(x, xs) => if p(x) { xs.force().drop_while(p) } else { self }
   }
 }
 
@@ -315,12 +317,12 @@ pub fn nats() -> LazyList[Int] {
 pub fn[A, B, C] zip_lazy_normal(
   self : LazyList[A],
   f : (A, B) -> C,
-  ys : @immut/list.T[B],
-) -> @immut/list.T[C] {
+  ys : @list.List[B],
+) -> @list.List[C] {
   match (self, ys) {
-    (Cons(x, xs), Cons(y, ys)) =>
-      Cons(f(x, y), zip_lazy_normal(xs.force(), f, ys))
-    (_, _) => Nil
+    (Cons(x, xs), List::More(y, tail~)) =>
+      @list.construct(f(x, y), xs.force().zip_lazy_normal(f, tail))
+    (_, _) => @list.empty()
   }
 }
 
@@ -361,9 +363,9 @@ pub fn[T] filter(self : LazyList[T], pred : (T) -> Bool) -> LazyList[T] {
     Cons(x, xs) => {
       let xs = xs.force()
       if pred(x) {
-        Cons(x, Lazy::from_thunk(fn() { filter(xs, pred) }))
+        Cons(x, Lazy::from_thunk(fn() { xs.filter(pred) }))
       } else {
-        filter(xs, pred)
+        xs.filter(pred)
       }
     }
   }

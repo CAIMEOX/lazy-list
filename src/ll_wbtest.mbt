@@ -30,7 +30,7 @@ test "lazy" {
 
 ///|
 test "empty list operations" {
-  let empty = Nil
+  let empty : LazyList[Unit] = Nil
   assert_true(empty == LazyList::from_array([]))
   assert_eq(empty.length(), 0)
   assert_eq(empty.to_array(), [])
@@ -39,7 +39,7 @@ test "empty list operations" {
 
 ///|
 test "default construction" {
-  let empty = default()
+  let empty : LazyList[Unit] = default()
   assert_true(empty == Nil)
   assert_eq(empty.length(), 0)
 }
@@ -110,7 +110,9 @@ test "flat_map operations" {
   let lst = LazyList::from_array([1, 2, 3])
   let expanded = lst.flat_map(fn(x) { LazyList::from_array([x, x * 10]) })
   inspect(expanded, content="[1, 10, 2, 20, 3, 30]")
-  let empty_flat = lst.flat_map(fn(_) { Nil })
+  let empty_flat : LazyList[Int] = lst.flat_map(fn(_) {
+    LazyList::from_array([])
+  })
   assert_true(empty_flat == Nil)
 }
 
