@@ -49,7 +49,7 @@ pub impl[T : Show] Show for LazyList[T] with output(self, logger) {
 
 ///|
 /// Provides Eq implementation for LazyList, enabling equality comparison.
-pub impl[T : Eq] Eq for LazyList[T] with op_equal(self, other) {
+pub impl[T : Eq] Eq for LazyList[T] with equal(self, other) {
   loop (self, other, true) {
     (_, _, false) => false
     (Nil, Nil, true) => true
@@ -97,7 +97,7 @@ pub fn[T] concat(self : LazyList[T], other : LazyList[T]) -> LazyList[T] {
 
 ///|
 /// Provides Add implementation for LazyList using concat operation.
-pub impl[T] Add for LazyList[T] with op_add(self, other) {
+pub impl[T] Add for LazyList[T] with add(self, other) {
   self.concat(other)
 }
 
@@ -321,7 +321,7 @@ pub fn[A, B, C] zip_lazy_normal(
 ) -> @list.List[C] {
   match (self, ys) {
     (Cons(x, xs), List::More(y, tail~)) =>
-      @list.construct(f(x, y), xs.force().zip_lazy_normal(f, tail))
+      @list.cons(f(x, y), xs.force().zip_lazy_normal(f, tail))
     (_, _) => @list.empty()
   }
 }
